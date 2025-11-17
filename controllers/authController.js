@@ -54,8 +54,6 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   try {
-    await User.deleteOne({email:'wajidali43@gmail.com'})
-    await User.deleteOne({email:'raahimwajid21@gmail.com'})
      await User.deleteMany({
       isVerified: false,
       verificationTokenExpires: { $lt: Date.now() },
