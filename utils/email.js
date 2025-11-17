@@ -46,7 +46,8 @@ const transporter = nodemailer.createTransport({
 
 const sendVerificationEmail = async (email, token) => {
   const url = `${process.env.FRONTEND_URL}/verify?token=${token}`;
-  await transporter.sendMail({
+  try {
+    await transporter.sendMail({
     from: `"ShopHub" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'Verify Your Email - ShopHub',
@@ -61,6 +62,10 @@ const sendVerificationEmail = async (email, token) => {
       </div>
     `,
   });
+  } catch (error) {
+    console.log(error)
+    throw error
+  }
 };
 
 const sendPasswordResetEmail = async (email, resetUrl) => {
