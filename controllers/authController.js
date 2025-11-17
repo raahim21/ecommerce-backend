@@ -22,8 +22,33 @@ const setAuthCookie = (res, token) => {
   });
 };
 
+// exports.register = async (req, res) => {
+//   const { name, email, password } = req.body;
+//   try {
+//     if (!name || !email || !password) {
+//       return res.status(400).json({ msg: 'All fields are required' });
+//     }
+
+//     const existing = await User.findOne({ email });
+//     if (existing) return res.status(400).json({ msg: 'Email already in use' });
+
+//     const token = crypto.randomBytes(20).toString('hex');
+//     const user = new User({ name, email, password, verificationToken: token });
+//     await user.save();
+
+//     await sendVerificationEmail(email, token);
+//     res.status(201).json({ msg: 'Verification email sent' });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ msg: 'Server error' });
+//   }
+// };
+
+
+
 exports.register = async (req, res) => {
   const { name, email, password } = req.body;
+
   try {
     if (!name || !email || !password) {
       return res.status(400).json({ msg: 'All fields are required' });
@@ -37,7 +62,10 @@ exports.register = async (req, res) => {
     await user.save();
 
     await sendVerificationEmail(email, token);
-    res.status(201).json({ msg: 'Verification email sent' });
+
+    res.status(201).json({
+      msg: 'Verification email sent (check console for preview URL)',
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: 'Server error' });
