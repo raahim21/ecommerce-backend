@@ -23,38 +23,6 @@ const setAuthCookie = (res, token) => {
 };
 
 
-// exports.register = async (req, res) => {
-//   const { name, email, password } = req.body;
-
-//   try {
-//     if (!name || !email || !password) {
-//       return res.status(400).json({ msg: 'All fields are required' });
-//     }
-
-//     const existing = await User.findOne({ email });
-//     if (existing) return res.status(400).json({ msg: 'Email already in use' });
-
-//     const token = crypto.randomBytes(20).toString('hex');
-//     const user = new User({ name, email, password, verificationToken: token });
-//     await user.save();
-
-//     await sendVerificationEmail(email, token);
-
-//     res.status(201).json({
-//       msg: 'Verification email sent (check console for preview URL)',
-//     });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ msg: 'Server error' });
-//   }
-// };
-
-
-
-// const crypto = require('crypto');
-// const User = require('../models/User');
-// const { sendVerificationEmail } = require('../utils/email');
-
 exports.register = async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -67,7 +35,9 @@ exports.register = async (req, res) => {
     if (existing) return res.status(400).json({ msg: 'Email already in use' });
 
     const token = crypto.randomBytes(20).toString('hex');
-    const user = new User({ name, email, password, verificationToken: token });
+    const expires = Date.now() + 1000 * 10 * 60; // 10 mins
+
+    const user = new User({ name, email, password, verificationToken: token, verificationTokenExpires:expires });
     await user.save();
 
     await sendVerificationEmail(email, token);
@@ -84,6 +54,12 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   try {
+
+     await User.deleteMany({
+      isVerified: false,
+      verificationTokenExpires: { $lt: Date.now() },
+    });
+    
     const user = await User.findOne({ email });
     if (!user || !(await user.comparePassword(password))) {
       return res.status(400).json({ msg: 'Invalid credentials' });
@@ -100,21 +76,45 @@ exports.login = async (req, res) => {
   }
 };
 
+// exports.verifyEmail = async (req, res) => {
+//   const { token } = req.params;
+//   try {
+//     const user = await User.findOne({ verificationToken: token });
+//     if (!user) return res.status(400).json({ msg: 'Invalid or expired token' });
+
+//     user.isVerified = true;
+//     user.verificationToken = undefined;
+//     await user.save();
+
+//     res.json({ msg: 'Email verified! You can now log in.' });
+//   } catch (err) {
+//     res.status(500).json({ msg: 'Server error' });
+//   }
+// };
+
+
 exports.verifyEmail = async (req, res) => {
   const { token } = req.params;
   try {
-    const user = await User.findOne({ verificationToken: token });
+    const user = await User.findOne({
+      verificationToken: token,
+      verificationTokenExpires: { $gt: Date.now() },
+    });
+
     if (!user) return res.status(400).json({ msg: 'Invalid or expired token' });
 
     user.isVerified = true;
     user.verificationToken = undefined;
+    user.verificationTokenExpires = undefined;
     await user.save();
 
     res.json({ msg: 'Email verified! You can now log in.' });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ msg: 'Server error' });
   }
 };
+
 
 exports.changePassword = async (req, res) => {
   try {
