@@ -10,6 +10,7 @@
   "author": "Raahim Wajid Ali",
   "license": "ISC",
   "dependencies": {
+    "@sendgrid/mail": "^8.1.6",
     "@stripe/react-stripe-js": "^5.3.0",
     "@stripe/stripe-js": "^8.3.0",
     "bcrypt": "^6.0.0",
