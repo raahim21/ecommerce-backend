@@ -99,34 +99,18 @@
 
 
 
+
+
 const nodemailer = require('nodemailer');
 
-let testAccount, transporter;
-
-// Initialize Ethereal transporter once
-async function initEmail() {
-  if (!transporter) {
-    testAccount = await nodemailer.createTestAccount();
-
-    transporter = nodemailer.createTransport({
-      host: testAccount.smtp.host,
-      port: testAccount.smtp.port,
-      secure: testAccount.smtp.secure,
-      auth: {
-        user: testAccount.user,
-        pass: testAccount.pass,
-      },
-    });
-
-    console.log("Ethereal Email initialized");
-  }
-}
+// Use JSON transport to avoid SMTP/network issues
+const transporter = nodemailer.createTransport({
+  jsonTransport: true, // emails are output as JSON, no SMTP needed
+});
 
 // Send verification email
 async function sendVerificationEmail(toEmail, token) {
-  await initEmail();
-
-  const url = `${process.env.FRONTEND_URL}/verify?token=${token}`;
+  const url = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify?token=${token}`;
 
   const info = await transporter.sendMail({
     from: '"ShopHub" <no-reply@shophub.com>',
@@ -144,15 +128,11 @@ async function sendVerificationEmail(toEmail, token) {
     `,
   });
 
-  console.log("Verification Email Preview URL:", nodemailer.getTestMessageUrl(info));
+  console.log('Verification Email JSON output:', info.message);
 }
 
 // Send password reset email
-async function sendPasswordResetEmail(toEmail, resetToken) {
-  await initEmail();
-
-  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-
+async function sendPasswordResetEmail(toEmail, resetUrl) {
   const info = await transporter.sendMail({
     from: '"ShopHub" <no-reply@shophub.com>',
     to: toEmail,
@@ -170,7 +150,7 @@ async function sendPasswordResetEmail(toEmail, resetToken) {
     `,
   });
 
-  console.log("Password Reset Email Preview URL:", nodemailer.getTestMessageUrl(info));
+  console.log('Password Reset Email JSON output:', info.message);
 }
 
 module.exports = { sendVerificationEmail, sendPasswordResetEmail };

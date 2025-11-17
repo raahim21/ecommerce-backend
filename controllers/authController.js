@@ -22,8 +22,10 @@ const setAuthCookie = (res, token) => {
   });
 };
 
+
 // exports.register = async (req, res) => {
 //   const { name, email, password } = req.body;
+
 //   try {
 //     if (!name || !email || !password) {
 //       return res.status(400).json({ msg: 'All fields are required' });
@@ -37,7 +39,10 @@ const setAuthCookie = (res, token) => {
 //     await user.save();
 
 //     await sendVerificationEmail(email, token);
-//     res.status(201).json({ msg: 'Verification email sent' });
+
+//     res.status(201).json({
+//       msg: 'Verification email sent (check console for preview URL)',
+//     });
 //   } catch (err) {
 //     console.error(err);
 //     res.status(500).json({ msg: 'Server error' });
@@ -45,6 +50,10 @@ const setAuthCookie = (res, token) => {
 // };
 
 
+
+// const crypto = require('crypto');
+// const User = require('../models/User');
+// const { sendVerificationEmail } = require('../utils/email');
 
 exports.register = async (req, res) => {
   const { name, email, password } = req.body;
@@ -64,7 +73,7 @@ exports.register = async (req, res) => {
     await sendVerificationEmail(email, token);
 
     res.status(201).json({
-      msg: 'Verification email sent (check console for preview URL)',
+      msg: 'Verification email sent (check console for JSON output)',
     });
   } catch (err) {
     console.error(err);
