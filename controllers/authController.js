@@ -297,7 +297,7 @@ exports.register = async (req, res) => {
 
     // Generate verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+    const verificationTokenExpires = Date.now() +  15 * 60 * 1000; // 24 hours
 
     const user = await User.create({
       name,
