@@ -1,5 +1,9 @@
 // models/Order.js
 const mongoose = require("mongoose");
+let mongoosePaginate = require('mongoose-paginate-v2')
+
+
+
 
 const orderItemSchema = new mongoose.Schema({
   productId: {
@@ -37,8 +41,14 @@ const orderSchema = new mongoose.Schema(
     paymentStatus: { type: String, enum: ["pending", "succeeded", "failed"], default: "pending" },
     shippingAddress: { type: String }, // optional
     status: { type: String, enum: ["processing", "shipped", "delivered", "cancelled"], default: "processing" },
+    isDeleted: { 
+      type: Boolean, 
+      default: false 
+    },
   },
   { timestamps: true }
 );
+
+orderSchema.plugin(mongoosePaginate);
 
 module.exports = mongoose.model("Order", orderSchema);

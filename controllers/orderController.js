@@ -39,13 +39,284 @@ async function deductStock(order) {
 
 
 export const getOrders = async(req, res) => {
-  let orders = await Order.find({user:req.user.id}).populate('items.variantId')
+  let orders = await Order.find({user:req.user.id, isDeleted:false}).populate('items.variantId')
   return res.status(200).json({orders})
 }
 
 
 
-// controllers/orderController.js (add these)
+
+// routes or controller for listing orders
+// export const getAllOrdersAdmin = async (req, res) => {
+//   try {
+    
+//     // {isDeleted:false}
+    
+//     const orders = await Order.find({isDeleted:false})
+//       .populate('user', 'name email')
+//       .populate({
+//         path: 'items.productId',
+//         select: 'name image'
+//       })
+//       .sort({ createdAt: -1 });
+
+// //       for (const order of orders) {
+// //   if (order.status !== 'cancelled') {
+// //     order.isDeleted = false;
+// //     await order.save();  // ← await is crucial!
+// //   }
+// // }
+      
+//     res.json({ orders });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// };
+
+
+
+// controllers/orderController.js
+// export const getAllOrdersAdmin = async (req, res) => {
+//   try {
+//     const {
+//       page = 1,
+//       limit = 10,
+//       search,           // search by order ID or user name/email
+//       status,
+//       paymentMethod,
+//       paymentStatus,
+//       startDate,
+//       endDate,
+//     } = req.query;
+
+//     const query = { isDeleted: false };
+
+//     // Search: by Order ID (partial) or User name/email
+//     if (search) {
+//       const searchRegex = new RegExp(search.trim(), 'i');
+//       query.$or = [
+//         { _id: { $regex: searchRegex } },
+//         { 'user.name': { $regex: searchRegex } },
+//         { 'user.email': { $regex: searchRegex } },
+//       ];
+//     }
+
+
+//     // Filters
+//     if (status) query.status = status;
+//     if (paymentMethod) query.paymentMethod = paymentMethod;
+//     if (paymentStatus) query.paymentStatus = paymentStatus;
+
+//     // Date range filter
+//     if (startDate || endDate) {
+//       query.createdAt = {};
+//       if (startDate) query.createdAt.$gte = new Date(startDate);
+//       if (endDate) {
+//         const end = new Date(endDate);
+//         end.setHours(23, 59, 59, 999);
+//         query.createdAt.$lte = end;
+//       }
+//     }
+
+//     const options = {
+//       page: parseInt(page, 10),
+//       limit: parseInt(limit, 10),
+//       sort: { createdAt: -1 },
+//       populate: [
+//         { path: 'user', select: 'name email' },
+//         { path: 'items.productId', select: 'name image' }
+//       ]
+//     };
+
+//     // Use mongoose-paginate-v2 or manual aggregation
+//     const result = await Order.paginate(query, options);
+
+//     res.json({
+//       orders: result.docs,
+//       pagination: {
+//         total: result.totalDocs,
+//         pages: result.totalPages,
+//         page: result.page,
+//         limit: result.limit,
+//         hasNext: result.hasNextPage,
+//         hasPrev: result.hasPrevPage,
+//       }
+//     });
+
+//   } catch (err) {
+//     console.error('Admin orders error:', err);
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// controllers/orderController.js
+export const getAllOrdersAdmin = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      status,
+      paymentMethod,
+      paymentStatus,
+      startDate,
+      endDate,
+    } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Build match stage
+    const match = { };
+
+    if (status) match.status = status;
+    if (paymentMethod) match.paymentMethod = paymentMethod;
+    if (paymentStatus) match.paymentStatus = paymentStatus;
+
+    if (startDate || endDate) {
+      match.createdAt = {};
+      if (startDate) match.createdAt.$gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        match.createdAt.$lte = end;
+      }
+    }
+
+    // Aggregation pipeline
+    const pipeline = [
+      { $match: match },
+
+      // Lookup user
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'userInfo'
+        }
+      },
+      { $unwind: { path: '$userInfo', preserveNullAndEmptyArrays: true } },
+
+      // Lookup product names/images
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'items.productId',
+          foreignField: '_id',
+          as: 'productDetails'
+        }
+      },
+
+      // Add user name/email to root
+      {
+        $addFields: {
+          'user.name': { $ifNull: ['$userInfo.name', 'Guest'] },
+          'user.email': { $ifNull: ['$userInfo.email', 'N/A'] },
+          items: {
+            $map: {
+              input: '$items',
+              as: 'item',
+              in: {
+                $mergeObjects: [
+                  '$$item',
+                  {
+                    productId: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: '$productDetails',
+                            cond: { $eq: ['$$this._id', '$$item.productId'] }
+                          }
+                        },
+                        0
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+
+      // Search filter (after user fields are added)
+      ...(search?.trim()
+        ? [{
+            $match: {
+              $or: [
+                { _id: { $regex: new RegExp(search.trim(), 'i') } },
+                { 'user.name': { $regex: new RegExp(search.trim(), 'i') } },
+                { 'user.email': { $regex: new RegExp(search.trim(), 'i') } },
+              ]
+            }
+          }]
+        : []),
+
+      // Sort
+      { $sort: { createdAt: -1 } },
+
+      // Facet for pagination
+      {
+        $facet: {
+          orders: [{ $skip: skip }, { $limit: parseInt(limit) }],
+          totalCount: [{ $count: 'total' }]
+        }
+      }
+    ];
+
+    const result = await Order.aggregate(pipeline);
+
+    const orders = result[0].orders || [];
+    const total = result[0].totalCount[0]?.total || 0;
+    const pages = Math.ceil(total / limit);
+
+    res.json({
+      orders,
+      pagination: {
+        total,
+        pages,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        hasNext: parseInt(page) < pages,
+        hasPrev: parseInt(page) > 1
+      }
+    });
+
+  } catch (err) {
+    console.error('getAllOrdersAdmin error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+
+
+
+
+
+
+
+
 
 export const getAllOrders = async (req, res) => {
   try {
@@ -61,24 +332,70 @@ export const getAllOrders = async (req, res) => {
   }
 };
 
+
+
+// controllers/orderController.js or wherever updateOrderAdmin is
 export const updateOrderAdmin = async (req, res) => {
   const { status, paymentStatus } = req.body;
+  const orderId = req.params.id;
 
   try {
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(orderId).populate('items.productId');
     if (!order) return res.status(404).json({ message: 'Order not found' });
+    if (order.isDeleted) return res.status(410).json({ message: 'Order already deleted' });
 
-    if (status) order.status = status;
+    // Detect if status is changing TO "cancelled"
+    const isCancelling = status === 'cancelled' && order.status !== 'cancelled';
+
+    if (isCancelling) {
+      // Restore stock for each item
+      for (const item of order.items) {
+        const product = item.productId;
+        if (!product) continue;
+
+        const variant = product.variants.id(item.variantId);
+        if (variant) {
+          variant.stock += item.quantity;
+          await product.save();
+        }
+      }
+
+      // Soft delete the order
+      order.isDeleted = true;
+      order.deletedAt = new Date();
+      order.status = 'cancelled'; // still set status
+    }
+
+    // Apply regular updates
+    if (status && !isCancelling) order.status = status;
     if (paymentStatus) order.paymentStatus = paymentStatus;
 
     await order.save();
 
-    res.json({ message: 'Order updated', order });
+    // Return updated order (with populated data if needed)
+    const updatedOrder = await Order.findById(orderId).populate({
+      path: 'items.productId',
+      select: 'name image variants'
+    });
+
+    res.json({ 
+      message: isCancelling ? 'Order cancelled and stock restored' : 'Order updated', 
+      order: updatedOrder 
+    });
+
   } catch (err) {
-    console.error(err);
+    console.error('Error updating order:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+
+
+
+
+
+
+
 
 export const createOrder = async (req, res) => {
   const {
