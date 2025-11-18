@@ -15,5 +15,8 @@ router.post('/create-order', orderController.createOrder);
 router.get('/', orderController.getOrders);
 router.get('/:id', orderController.getOrder);
 
+router.get('/admin/orders', orderController.getAllOrders);
+router.patch('/admin/orders/:id'  , orderController.updateOrderAdmin);
+
 
 module.exports = router;

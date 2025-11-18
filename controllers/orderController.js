@@ -1,6 +1,7 @@
 import Product from "../models/Product.js";
 import mongoose from "mongoose";
-
+import Order from '../models/Order.js'
+import User from '../models/User.js'
 
 async function deductStock(order) {
   const session = await mongoose.startSession();
@@ -36,14 +37,48 @@ async function deductStock(order) {
 
 
 
-// controllers/orderController.js
-import User from "../models/User.js";
-import Order from "../models/Order.js";
 
 export const getOrders = async(req, res) => {
   let orders = await Order.find({user:req.user.id}).populate('items.variantId')
   return res.status(200).json({orders})
 }
+
+
+
+// controllers/orderController.js (add these)
+
+export const getAllOrders = async (req, res) => {
+  try {
+    const orders = await Order.find()
+      .populate('user', 'name email')
+      .populate('items.productId', 'name image')
+      .sort({ createdAt: -1 });
+
+    res.json({ orders });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const updateOrderAdmin = async (req, res) => {
+  const { status, paymentStatus } = req.body;
+
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+
+    if (status) order.status = status;
+    if (paymentStatus) order.paymentStatus = paymentStatus;
+
+    await order.save();
+
+    res.json({ message: 'Order updated', order });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
 export const createOrder = async (req, res) => {
   const {

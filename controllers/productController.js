@@ -192,27 +192,71 @@ exports.createProduct = async (req, res) => {
 /* -------------------------------------------------------------
    PUT /api/products/:id   (admin only)
    ------------------------------------------------------------- */
+// exports.updateProduct = async (req, res) => {
+//   try {
+//     const {
+//       name,
+//       description,
+//       category,
+//       subCategory,
+//       image,
+//       images,
+//       variants,
+//     } = req.body;
+
+//     const updateData = {
+//       ...(name && { name: name.trim() }),
+//       ...(description && { description }),
+//       ...(category && { category }),
+//       ...(subCategory && { subCategory }),
+//       ...(image !== undefined && { image: image || '' }),
+//       ...(images && { images }),
+//       ...(variants && { variants }),
+//     };
+
+//     const product = await Product.findByIdAndUpdate(
+//       req.params.id,
+//       updateData,
+//       { new: true, runValidators: true }
+//     );
+
+//     if (!product) return res.status(404).json({ msg: 'Product not found' });
+
+//     res.json({ msg: 'Product updated', product });
+//   } catch (err) {
+//     console.error('Update product error:', err);
+//     if (err.code === 11000) {
+//       return res.status(400).json({ msg: 'SKU already exists' });
+//     }
+//     res.status(500).json({ msg: 'Server error' });
+//   }
+// };
+
+
+
 exports.updateProduct = async (req, res) => {
   try {
-    const {
-      name,
-      description,
-      category,
-      subCategory,
-      image,
-      images,
-      variants,
-    } = req.body;
+    const { name, description, category, subCategory, image, images, variants } = req.body;
 
-    const updateData = {
-      ...(name && { name: name.trim() }),
-      ...(description && { description }),
-      ...(category && { category }),
-      ...(subCategory && { subCategory }),
-      ...(image !== undefined && { image: image || '' }),
-      ...(images && { images }),
-      ...(variants && { variants }),
-    };
+    const updateData = {};
+
+    if (name !== undefined) updateData.name = name.trim();
+    if (description !== undefined) updateData.description = description.trim();
+    if (category !== undefined) updateData.category = category;
+    if (subCategory !== undefined) updateData.subCategory = subCategory;
+    if (image !== undefined) updateData.image = image || '';
+    if (images !== undefined) updateData.images = images || [];
+
+    if (variants && Array.isArray(variants)) {
+      updateData.variants = variants.map(v => ({
+        // Preserve _id if editing existing variant
+        ...(v._id && mongoose.Types.ObjectId.isValid(v._id) && { _id: v._id }),
+        size: v.size.trim(),
+        price: Number(v.price),
+        stock: Number(v.stock),
+        sku: v.sku?.trim() || undefined,
+      }));
+    }
 
     const product = await Product.findByIdAndUpdate(
       req.params.id,
@@ -224,14 +268,13 @@ exports.updateProduct = async (req, res) => {
 
     res.json({ msg: 'Product updated', product });
   } catch (err) {
-    console.error('Update product error:', err);
+    console.error('Update error:', err);
     if (err.code === 11000) {
-      return res.status(400).json({ msg: 'SKU already exists' });
+      return res.status(400).json({ msg: 'SKU already exists. Please use a unique SKU.' });
     }
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({ msg: 'Server error', error: err.message });
   }
 };
-
 /* -------------------------------------------------------------
    DELETE /api/products/:id   (admin only)
    ------------------------------------------------------------- */
