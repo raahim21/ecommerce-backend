@@ -10,59 +10,100 @@
 
 
 
-// const nodemailer = require('nodemailer');
 
-// // Use JSON transport to avoid SMTP/network issues
+
+
+
+// // const { Resend } = require('resend');
+// // const resend = new Resend(process.env.RESEND_API_KEY);
+
+// // // Verification email
+// // async function sendVerificationEmail(toEmail, token) {
+// //   const url = `${process.env.FRONTEND_URL}/verify?token=${token}`;
+
+// //   await resend.emails.send({
+// //     from: "ShopHub <onboarding@resend.dev>",
+// //     to: toEmail,
+// //     subject: "Verify Your Email - ShopHub",
+// //     html: `
+// //       <div style="font-family: Arial; max-width: 600px; margin: auto; padding: 20px;">
+// //         <h2 style="color:#6b46c1;">Welcome to ShopHub!</h2>
+// //         <p>Please verify your email:</p>
+// //         <a href="${url}" style="background:#6b46c1; color:white; padding:10px 20px; border-radius:6px;">
+// //           Verify Email
+// //         </a>
+// //         <p>If the button doesn't work, use this URL:<br>${url}</p>
+// //       </div>
+// //     `
+// //   });
+// // }
+
+// // // Password reset
+// // async function sendPasswordResetEmail(toEmail, resetURL) {
+// //   await resend.emails.send({
+// //     from: "ShopHub <onboarding@resend.dev>",
+// //     to: toEmail,
+// //     subject: "Reset Your Password - ShopHub",
+//     // html: `
+//     //   <div style="font-family: Arial; max-width: 600px; margin: auto; padding: 20px;">
+//     //     <h2 style="color:#6b46c1;">Reset Your Password</h2>
+//     //     <p>Click below to continue:</p>
+//     //     <a href="${resetURL}" style="background:#6b46c1; color:white; padding:10px 20px; border-radius:6px;">
+//     //       Reset Password
+//     //     </a>
+//     //     <p>If the button doesn't work, use this URL:<br>${resetURL}</p>
+//     //   </div>
+//     // `
+// //   });
+// // }
+
+// // module.exports = { sendVerificationEmail, sendPasswordResetEmail };
+
+
+
+
+
+
+
+
+
+
+
+
+// const nodemailer = require("nodemailer");
+
+// // Create a test account or replace with real credentials.
 // const transporter = nodemailer.createTransport({
-//   jsonTransport: true, // emails are output as JSON, no SMTP needed
+//   host: "smtp.gmail.com",
+//   secure: true,
+//   auth: {
+//     user: "raahimwajid21@gmail.com",
+//     pass: "knhskvcffkfryjgb",
+//   },
 // });
 
-// // Send verification email
-// async function sendVerificationEmail(toEmail, token) {
-//   const url = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify?token=${token}`;
-
+// async function sendMail(toEmail, resetURL) {
 //   const info = await transporter.sendMail({
-//     from: '"ShopHub" <no-reply@shophub.com>',
+//     from: 'Shop Hub',
 //     to: toEmail,
-//     subject: 'Verify Your Email - ShopHub',
+//     subject: "Hello ✔",
+//     text: "Hello world?", // plain‑text body
+//     // html: "<b>Hello world?</b>", // HTML body
 //     html: `
-//       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 12px;">
-//         <h2 style="color: #6b46c1;">Welcome to ShopHub!</h2>
-//         <p>Please verify your email by clicking the button below:</p>
-//         <a href="${url}" style="display: inline-block; background: #6b46c1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 16px 0;">
-//           Verify Email
-//         </a>
-//         <p style="color: #666; font-size: 12px;">If the button doesn't work, copy this link: <br><code>${url}</code></p>
-//       </div>
-//     `,
-//   });
-
-//   console.log('Verification Email JSON output:', info.message);
-// }
-
-// // Send password reset email
-// async function sendPasswordResetEmail(toEmail, resetUrl) {
-//   const info = await transporter.sendMail({
-//     from: '"ShopHub" <no-reply@shophub.com>',
-//     to: toEmail,
-//     subject: 'Reset Your Password - ShopHub',
-//     html: `
-//       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 12px;">
-//         <h2 style="color: #6b46c1;">Password Reset Request</h2>
-//         <p>We received a request to reset your password. If you did not make this request, you can safely ignore this email.</p>
-//         <p>Click the button below to reset your password (link valid for 10 minutes):</p>
-//         <a href="${resetUrl}" style="display: inline-block; background: #6b46c1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 16px 0;">
+//       <div style="font-family: Arial; max-width: 600px; margin: auto; padding: 20px;">
+//         <h2 style="color:#6b46c1;">Reset Your Password</h2>
+//         <p>Click below to continue:</p>
+//         <a href="${resetURL}" style="background:#6b46c1; color:white; padding:10px 20px; border-radius:6px;">
 //           Reset Password
 //         </a>
-//         <p style="color: #666; font-size: 12px;">If the button doesn't work, copy this link: <br><code>${resetUrl}</code></p>
+//         <p>If the button doesn't work, use this URL:<br>${resetURL}</p>
 //       </div>
-//     `,
+//     `
 //   });
 
-//   console.log('Password Reset Email JSON output:', info.message);
+//   console.log("Message sent:", info.messageId);
 // }
 
-// module.exports = { sendVerificationEmail, sendPasswordResetEmail };
 
 
 
@@ -80,49 +121,100 @@
 
 
 
+// emailService.js
 
+const nodemailer = require("nodemailer");
 
-const { Resend } = require('resend');
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Gmail SMTP transporter (using environment variables for security)
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true, // SSL
+  auth: {
+    user: process.env.EMAIL_USER,     // e.g. raahimwajid21@gmail.com
+    pass: process.env.EMAIL_PASS,     // Your 16-digit App Password
+  },
+});
 
-// Verification email
+// Optional: Verify connection on startup
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("SMTP connection error:", error);
+  } else {
+    console.log("SMTP server is ready to send emails");
+  }
+});
+
+// ======================
+// Send Verification Email
+// ======================
 async function sendVerificationEmail(toEmail, token) {
-  const url = `${process.env.FRONTEND_URL}/verify?token=${token}`;
+  const verificationUrl = `${process.env.FRONTEND_URL}/verify?token=${token}`;
 
-  await resend.emails.send({
-    from: "ShopHub <onboarding@resend.dev>",
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+      <h2 style="color: #6b46c1;">Welcome to ShopHub!</h2>
+      <p>Thank you for signing up. Please verify your email address by clicking the button below:</p>
+      <p style="text-align: center; margin: 30px 0;">
+        <a href="${verificationUrl}" style="background:#6b46c1; color:white; padding:12px 28px; text-decoration:none; border-radius:6px; font-weight:bold; font-size:16px;">
+          Verify Email Address
+        </a>
+      </p>
+      <p>If the button doesn't work, copy and paste this link into your browser:<br/>
+        <a href="${verificationUrl}">${verificationUrl}</a>
+      </p>
+      <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;" />
+      <p style="color: #888; font-size: 12px;">This link will expire in 24 hours.</p>
+    </div>
+  `;
+
+  const info = await transporter.sendMail({
+    from: `"ShopHub" <${process.env.EMAIL_USER}>`,
     to: toEmail,
     subject: "Verify Your Email - ShopHub",
-    html: `
-      <div style="font-family: Arial; max-width: 600px; margin: auto; padding: 20px;">
-        <h2 style="color:#6b46c1;">Welcome to ShopHub!</h2>
-        <p>Please verify your email:</p>
-        <a href="${url}" style="background:#6b46c1; color:white; padding:10px 20px; border-radius:6px;">
-          Verify Email
-        </a>
-        <p>If the button doesn't work, use this URL:<br>${url}</p>
-      </div>
-    `
+    text: `Verify your email by visiting this link: ${verificationUrl}`,
+    html,
   });
+
+  console.log("Verification email sent →", info.messageId);
 }
 
-// Password reset
-async function sendPasswordResetEmail(toEmail, resetURL) {
-  await resend.emails.send({
-    from: "ShopHub <onboarding@resend.dev>",
-    to: toEmail,
-    subject: "Reset Your Password - ShopHub",
-    html: `
-      <div style="font-family: Arial; max-width: 600px; margin: auto; padding: 20px;">
-        <h2 style="color:#6b46c1;">Reset Your Password</h2>
-        <p>Click below to continue:</p>
-        <a href="${resetURL}" style="background:#6b46c1; color:white; padding:10px 20px; border-radius:6px;">
+// ======================
+// Send Password Reset Email
+// ======================
+async function sendPasswordResetEmail(toEmail, resetToken) {
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+      <h2 style="color: #6b46c1;">Password Reset Request</h2>
+      <p>You requested to reset your password. Click the button below to set a new password:</p>
+      <p style="text-align: center; margin: 30px 0;">
+        <a href="${resetUrl}" style="background:#6b46c1; color:white; padding:12px 28px; text-decoration:none; border-radius:6px; font-weight:bold; font-size:16px;">
           Reset Password
         </a>
-        <p>If the button doesn't work, use this URL:<br>${resetURL}</p>
-      </div>
-    `
+      </p>
+      <p>If the button doesn't work, use this link:<br/>
+        <a href="${resetUrl}">${resetUrl}</a>
+      </p>
+      <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;" />
+      <p style="color: #888; font-size: 12px;">This link will expire in 1 hour. If you didn't request this, please ignore this email.</p>
+    </div>
+  `;
+
+  const info = await transporter.sendMail({
+    from: `"ShopHub" <${process.env.EMAIL_USER}>`,
+    to: toEmail,
+    subject: "Reset Your Password - ShopHub",
+    text: `Reset your password here: ${resetUrl}`,
+    html,
   });
+
+  console.log("Password reset email sent →", info.messageId);
 }
 
-module.exports = { sendVerificationEmail, sendPasswordResetEmail };
+// Export the functions
+module.exports = {
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+};
