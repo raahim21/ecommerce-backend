@@ -1,128 +1,4 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// // const { Resend } = require('resend');
-// // const resend = new Resend(process.env.RESEND_API_KEY);
-
-// // // Verification email
-// // async function sendVerificationEmail(toEmail, token) {
-// //   const url = `${process.env.FRONTEND_URL}/verify?token=${token}`;
-
-// //   await resend.emails.send({
-// //     from: "ShopHub <onboarding@resend.dev>",
-// //     to: toEmail,
-// //     subject: "Verify Your Email - ShopHub",
-// //     html: `
-// //       <div style="font-family: Arial; max-width: 600px; margin: auto; padding: 20px;">
-// //         <h2 style="color:#6b46c1;">Welcome to ShopHub!</h2>
-// //         <p>Please verify your email:</p>
-// //         <a href="${url}" style="background:#6b46c1; color:white; padding:10px 20px; border-radius:6px;">
-// //           Verify Email
-// //         </a>
-// //         <p>If the button doesn't work, use this URL:<br>${url}</p>
-// //       </div>
-// //     `
-// //   });
-// // }
-
-// // // Password reset
-// // async function sendPasswordResetEmail(toEmail, resetURL) {
-// //   await resend.emails.send({
-// //     from: "ShopHub <onboarding@resend.dev>",
-// //     to: toEmail,
-// //     subject: "Reset Your Password - ShopHub",
-//     // html: `
-//     //   <div style="font-family: Arial; max-width: 600px; margin: auto; padding: 20px;">
-//     //     <h2 style="color:#6b46c1;">Reset Your Password</h2>
-//     //     <p>Click below to continue:</p>
-//     //     <a href="${resetURL}" style="background:#6b46c1; color:white; padding:10px 20px; border-radius:6px;">
-//     //       Reset Password
-//     //     </a>
-//     //     <p>If the button doesn't work, use this URL:<br>${resetURL}</p>
-//     //   </div>
-//     // `
-// //   });
-// // }
-
-// // module.exports = { sendVerificationEmail, sendPasswordResetEmail };
-
-
-
-
-
-
-
-
-
-
-
-
-// const nodemailer = require("nodemailer");
-
-// // Create a test account or replace with real credentials.
-// const transporter = nodemailer.createTransport({
-//   host: "smtp.gmail.com",
-//   secure: true,
-//   auth: {
-//     user: "raahimwajid21@gmail.com",
-//     pass: "knhskvcffkfryjgb",
-//   },
-// });
-
-// async function sendMail(toEmail, resetURL) {
-//   const info = await transporter.sendMail({
-//     from: 'Shop Hub',
-//     to: toEmail,
-//     subject: "Hello ✔",
-//     text: "Hello world?", // plain‑text body
-//     // html: "<b>Hello world?</b>", // HTML body
-//     html: `
-//       <div style="font-family: Arial; max-width: 600px; margin: auto; padding: 20px;">
-//         <h2 style="color:#6b46c1;">Reset Your Password</h2>
-//         <p>Click below to continue:</p>
-//         <a href="${resetURL}" style="background:#6b46c1; color:white; padding:10px 20px; border-radius:6px;">
-//           Reset Password
-//         </a>
-//         <p>If the button doesn't work, use this URL:<br>${resetURL}</p>
-//       </div>
-//     `
-//   });
-
-//   console.log("Message sent:", info.messageId);
-// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // emailService.js
-
 const nodemailer = require("nodemailer");
 
 // Gmail SMTP transporter (using environment variables for security)
@@ -134,6 +10,9 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,     // e.g. raahimwajid21@gmail.com
     pass: process.env.EMAIL_PASS,     // Your 16-digit App Password
   },
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
 });
 
 // Optional: Verify connection on startup
